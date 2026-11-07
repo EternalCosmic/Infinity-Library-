@@ -102,15 +102,34 @@
             transform: scale(0.98);
         }
 
+        .card-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .edit-btn {
+            background-color: transparent;
+            color: var(--portal-teal);
+            border: 1px solid var(--portal-teal);
+            padding: 5px 10px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: var(--portal-teal);
+            color: var(--cosmic-black);
+        }
+
         .delete-btn {
             background-color: transparent;
             color: #ff5555;
             border: 1px solid #ff5555;
             padding: 5px 10px;
             font-size: 0.8em;
-            margin-top: 10px;
             cursor: pointer;
-            float: right;
         }
 
         .delete-btn:hover {
@@ -222,124 +241,7 @@
     <script>
         const STORAGE_KEY = 'eternal_cosmic_infinity_books';
 
-        // Load books from localStorage on initialization
         document.addEventListener('DOMContentLoaded', renderLibrary);
 
         document.getElementById('addBookBtn').addEventListener('click', function() {
-            const title = document.getElementById('bookTitle').value.trim();
-            const review = document.getElementById('bookReview').value.trim();
-            const relation = document.getElementById('cosmicRelation').value.trim();
-            const rating = document.getElementById('bookRating').value;
-            const coverInput = document.getElementById('bookCover');
-
-            if (!title || !review || !relation || !rating) {
-                alert("Please fill in all cosmic data points.");
-                return;
-            }
-
-            const processBook = (coverSrc) => {
-                const newBook = {
-                    id: Date.now(),
-                    title,
-                    review,
-                    relation,
-                    rating,
-                    cover: coverSrc
-                };
-
-                const books = getSavedBooks();
-                books.push(newBook);
-                saveBooks(books);
-                renderLibrary();
-
-                // Clear inputs
-                document.getElementById('bookTitle').value = '';
-                document.getElementById('bookReview').value = '';
-                document.getElementById('cosmicRelation').value = '';
-                document.getElementById('bookRating').value = '';
-                coverInput.value = '';
-            };
-
-            if (coverInput.files && coverInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    processBook(e.target.result);
-                };
-                reader.readAsDataURL(coverInput.files[0]);
-            } else {
-                processBook('https://via.placeholder.com/100x150?text=No+Cover');
-            }
-        });
-
-        function getSavedBooks() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            return saved ? JSON.parse(saved) : [];
-        }
-
-        function saveBooks(books) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
-        }
-
-        function removeBook(id) {
-            let books = getSavedBooks();
-            books = books.filter(book => book.id !== id);
-            saveBooks(books);
-            renderLibrary();
-        }
-
-        function renderLibrary() {
-            const library = document.getElementById('libraryDisplay');
-            library.innerHTML = '';
-            const books = getSavedBooks();
-
-            books.forEach(book => {
-                const card = document.createElement('div');
-                card.className = 'book-card';
-                card.dataset.title = book.title.toLowerCase();
-                card.dataset.review = book.review.toLowerCase();
-                card.dataset.relation = book.relation.toLowerCase();
-
-                card.innerHTML = `
-                    <img class="book-cover" src="${book.cover}" alt="Cover">
-                    <h3 class="book-title">${escapeHTML(book.title)}</h3>
-                    <p class="star-rating">${'★'.repeat(book.rating)}</p>
-                    <p class="review-text">${escapeHTML(book.review)}</p>
-                    <p class="cosmic-relation">Infinity Relation: ${escapeHTML(book.relation)}</p>
-                    <button class="delete-btn" onclick="removeBook(${book.id})">Remove</button>
-                `;
-
-                library.appendChild(card);
-            });
-
-            filterBooks();
-        }
-
-        // Real-time Search
-        const searchInput = document.getElementById('searchBooks');
-        searchInput.addEventListener('input', filterBooks);
-
-        function filterBooks() {
-            const query = searchInput.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.book-card');
-
-            cards.forEach(card => {
-                const title = card.dataset.title || '';
-                const review = card.dataset.review || '';
-                const relation = card.dataset.relation || '';
-
-                if (title.includes(query) || review.includes(query) || relation.includes(query)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
-        }
-    </script>
-</body>
-</html>
+            const title = document
