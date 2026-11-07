@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Eternal Cosmic Infinity Library</title>
+    <style>
+        :root {
+            --cosmic-black: #05010a;
+            --nebula-purple: #3e125c;
+            --star-gold: #f7d56b;
+            --portal-teal: #0de7e7;
+            --void-white: #f5f5ff;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--cosmic-black);
+            color: var(--void-white);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            font-family: 'Garamond', serif;
+            text-align: center;
+            color: var(--star-gold);
+            text-shadow: 0 0 10px rgba(247, 213, 107, 0.7);
+        }
+
+        .portal-header {
+            border: 2px solid var(--portal-teal);
+            padding: 20px;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--cosmic-black), var(--nebula-purple));
+            box-shadow: 0 0 20px var(--portal-teal);
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .input-section, .search-section {
+            background-color: rgba(62, 18, 92, 0.3);
+            border: 1px solid var(--nebula-purple);
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            margin-bottom: 30px;
+        }
+
+        .search-section {
+            border-color: var(--portal-teal);
+            box-shadow: inset 0 0 10px rgba(13, 231, 231, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--portal-teal);
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--star-gold);
+            background-color: var(--cosmic-black);
+            color: var(--void-white);
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        button {
+            background-color: var(--star-gold);
+            color: var(--cosmic-black);
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #fce79f;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .library-display {
+            width: 90%;
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .book-card {
+            background-color: var(--nebula-purple);
+            border: 1px solid var(--star-gold);
+            padding: 15px;
+            border-radius: 5px;
+            transition: box-shadow 0.3s;
+        }
+
+        .book-card:hover {
+            box-shadow: 0 0 15px var(--portal-teal);
+        }
+
+        .book-title {
+            color: var(--void-white);
+            margin-top: 0;
+            border-bottom: 1px solid var(--void-white);
+            padding-bottom: 5px;
+        }
+
+        .book-cover {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid var(--void-white);
+            float: left;
+            margin-right: 15px;
+        }
+
+        .review-text {
+            color: var(--void-white);
+            font-style: italic;
+        }
+
+        .cosmic-relation {
+            margin-top: 10px;
+            color: var(--portal-teal);
+            font-weight: bold;
+        }
+
+        .star-rating {
+            color: var(--star-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-header">
+        <h1>Welcome to the Eternal Cosmic Infinity Library</h1>
+        <h2>Add your knowledge to the infinite expanse...</h2>
+    </div>
+
+    <!-- Input Section -->
+    <div class="input-section">
+        <div class="input-group">
+            <label for="bookTitle">Book Title:</label>
+            <input type="text" id="bookTitle" placeholder="Enter book title (e.g., 'Cosmos')">
+        </div>
+
+        <div class="input-group">
+            <label for="bookReview">Review:</label>
+            <textarea id="bookReview" placeholder="Describe the knowledge within..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="cosmicRelation">How it relates to the Eternal Cosmic Infinity Portal:</label>
+            <input type="text" id="cosmicRelation" placeholder="Connect this text to the infinite...">
+        </div>
+
+        <div class="input-group">
+            <label for="bookRating">Rating (1-5 Cosmic Stars):</label>
+            <input type="number" id="bookRating" min="1" max="5">
+        </div>
+
+        <div class="input-group">
+            <label for="bookCover">Book Cover (Image File):</label>
+            <input type="file" id="bookCover" accept="image/*">
+        </div>
+
+        <button id="addBookBtn">Add to the Library</button>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section">
+        <div class="input-group" style="margin-bottom: 0;">
+            <label for="searchBooks">Search the Library:</label>
+            <input type="text" id="searchBooks" placeholder="Filter by title, review, or cosmic connection...">
+        </div>
+    </div>
+
+    <div id="libraryDisplay" class="library-display">
+        <!-- Sample Entry for Visual Preview -->
+        <div class="book-card" data-title="cosmos" data-review="a personal voyage into the cosmic ocean of space and time." data-relation="maps the overarching structural alignment of celestial mechanics.">
+            <svg class="book-cover" width="100" height="150" viewBox="0 0 100 150" style="background:#05010a; border:1px solid #f5f5ff; float:left; margin-right:15px;">
+                <rect width="100" height="150" fill="#05010a"/>
+                <circle cx="50" cy="75" r="30" fill="none" stroke="#0de7e7" stroke-width="2"/>
+                <circle cx="50" cy="75" r="8" fill="#f7d56b"/>
+                <text x="50" y="130" fill="#f5f5ff" font-size="10" text-anchor="middle" font-family="Courier New">COSMOS</text>
+            </svg>
+            <h3 class="book-title">Cosmos</h3>
+            <p class="star-rating">★★★★★</p>
+            <p class="review-text">A personal voyage into the cosmic ocean of space and time.</p>
+            <p class="cosmic-relation">Infinity Relation: Maps the overarching structural alignment of celestial mechanics.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('addBookBtn').addEventListener('click', function() {
+            const title = document.getElementById('bookTitle').value;
+            const review = document.getElementById('bookReview').value;
+            const relation = document.getElementById('cosmicRelation').value;
+            const rating = document.getElementById('bookRating').value;
+            const coverInput = document.getElementById('bookCover');
+            const library = document.getElementById('libraryDisplay');
+
+            if (!title || !review || !relation || !rating) {
+                alert("Please fill in all cosmic data points.");
+                return;
+            }
+
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.dataset.title = title.toLowerCase();
+            card.dataset.review = review.toLowerCase();
+            card.dataset.relation = relation.toLowerCase();
+
+            const bookTitleHeader = document.createElement('h3');
+            bookTitleHeader.className = 'book-title';
+            bookTitleHeader.innerText = title;
+
+            let bookCoverImg = document.createElement('img');
+            bookCoverImg.className = 'book-cover';
+
+            if (coverInput.files && coverInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    bookCoverImg.src = e.target.result;
+                };
+                reader.readAsDataURL(coverInput.files[0]);
+            } else {
+                bookCoverImg.src = 'https://via.placeholder.com/100x150?text=No+Cover';
+            }
+
+            const reviewPara = document.createElement('p');
+            reviewPara.className = 'review-text';
+            reviewPara.innerText = review;
+
+            const ratingPara = document.createElement('p');
+            ratingPara.className = 'star-rating';
+            ratingPara.innerHTML = '★'.repeat(rating);
+
+            const relationPara = document.createElement('p');
+            relationPara.className = 'cosmic-relation';
+            relationPara.innerText = `Infinity Relation: ${relation}`;
+
+            card.appendChild(bookCoverImg);
+            card.appendChild(bookTitleHeader);
+            card.appendChild(ratingPara);
+            card.appendChild(reviewPara);
+            card.appendChild(relationPara);
+
+            library.appendChild(card);
+
+            document.getElementById('bookTitle').value = '';
+            document.getElementById('bookReview').value = '';
+            document.getElementById('cosmicRelation').value = '';
+            document.getElementById('bookRating').value = '';
+            coverInput.value = '';
+
+            filterBooks();
+        });
+
+        const searchInput = document.getElementById('searchBooks');
+        searchInput.addEventListener('input', filterBooks);
+
+        function filterBooks() {
+            const query = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.book-card');
+
+            cards.forEach(card => {
+                const title = card.dataset.title || '';
+                const review = card.dataset.review || '';
+                const relation = card.dataset.relation || '';
+
+                if (title.includes(query) || review.includes(query) || relation.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
