@@ -238,177 +238,186 @@
 
     <div id="libraryDisplay" class="library-display"></div>
 
-    <script>
-        const STORAGE_KEY = 'eternal_cosmic_infinity_books';
+   <!-- Load Supabase JS Client Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        document.addEventListener('DOMContentLoaded', renderLibrary);
+<script>
+    // Initialize Supabase Client with your project credentials
+    const SUPABASE_URL = 'https://xblhmmvytpqipwwwseru.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_mM6ayBpoXPT3of_8kN4tUw_1tRX_MHg';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        document.getElementById('addBookBtn').addEventListener('click', function() {
-            const titleInput = document.getElementById('bookTitle');
-            const reviewInput = document.getElementById('bookReview');
-            const relationInput = document.getElementById('cosmicRelation');
-            const ratingInput = document.getElementById('bookRating');
-            const coverInput = document.getElementById('bookCover');
+    document.addEventListener('DOMContentLoaded', fetchAndRenderLibrary);
 
-            const title = titleInput.value.trim();
-            const review = reviewInput.value.trim();
-            const relation = relationInput.value.trim();
-            const rating = parseInt(ratingInput.value, 10);
+    // Add a New Book
+    document.getElementById('addBookBtn').addEventListener('click', async function() {
+        const titleInput = document.getElementById('bookTitle');
+        const reviewInput = document.getElementById('bookReview');
+        const relationInput = document.getElementById('cosmicRelation');
+        const ratingInput = document.getElementById('bookRating');
+        const coverInput = document.getElementById('bookCover');
 
-            // Validate fields immediately before processing files
-            if (!title || !review || !relation || isNaN(rating)) {
-                alert("Please fill in all cosmic data points.");
-                return;
-            }
+        const title = titleInput.value.trim();
+        const review = reviewInput.value.trim();
+        const relation = relationInput.value.trim();
+        const rating = parseInt(ratingInput.value, 10);
 
-            const saveAndReset = (coverSrc) => {
-                const newBook = {
-                    id: Date.now(),
-                    title,
-                    review,
-                    relation,
-                    rating,
-                    cover: coverSrc
-                };
+        if (!title || !review || !relation || isNaN(rating)) {
+            alert("Please fill in all cosmic data points.");
+            return;
+        }
 
-                const books = getSavedBooks();
-                books.push(newBook);
-                saveBooks(books);
-                renderLibrary();
+        let coverUrl = 'https://via.placeholder.com/100x150?text=No+Cover';
 
-                // Clear input fields
-                titleInput.value = '';
-                reviewInput.value = '';
-                relationInput.value = '';
-                ratingInput.value = '';
-                coverInput.value = '';
-            };
+        // Upload Cover Image to Supabase Storage if Selected
+        if (coverInput.files && coverInput.files[0]) {
+            const file = coverInput.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}.${fileExt}`;
 
-            // Handle file reader safely
-            if (coverInput.files && coverInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    saveAndReset(e.target.result);
-                };
-                reader.onerror = function() {
-                    // Fallback if image reading fails
-                    saveAndReset('https://via.placeholder.com/100x150?text=Error+Loading');
-                };
-                reader.readAsDataURL(coverInput.files[0]);
+            const { data: storageData, error: storageError } = await supabase.storage
+                .from('book-covers')
+                .upload(fileName, file);
+
+            if (storageError) {
+                console.error('Storage Upload Error:', storageError);
             } else {
-                saveAndReset('https://via.placeholder.com/100x150?text=No+Cover');
+                const { data: publicUrlData } = supabase.storage
+                    .from('book-covers')
+                    .getPublicUrl(fileName);
+                coverUrl = publicUrlData.publicUrl;
             }
+        }
+
+        // Insert Record into Supabase PostgreSQL Table
+        const { data, error } = await supabase
+            .from('books')
+            .insert([{ title, review, relation, rating, cover_url: coverUrl }]);
+
+        if (error) {
+            alert("Error adding book: " + error.message);
+        } else {
+            // Reset Inputs & Refresh Display
+            titleInput.value = '';
+            reviewInput.value = '';
+            relationInput.value = '';
+            ratingInput.value = '';
+            coverInput.value = '';
+            fetchAndRenderLibrary();
+        }
+    });
+
+    // Fetch Books from Database & Render to UI
+    async function fetchAndRenderLibrary() {
+        const library = document.getElementById('libraryDisplay');
+        library.innerHTML = '<p style="color: var(--portal-teal);">Fetching cosmic archives...</p>';
+
+        const { data: books, error } = await supabase
+            .from('books')
+            .select('*')
+            .order('id', { ascending: false });
+
+        library.innerHTML = '';
+
+        if (error) {
+            console.error('Fetch Error:', error);
+            library.innerHTML = '<p style="color: #ff5555;">Failed to load library records.</p>';
+            return;
+        }
+
+        books.forEach(book => {
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.dataset.title = (book.title || '').toLowerCase();
+            card.dataset.review = (book.review || '').toLowerCase();
+            card.dataset.relation = (book.relation || '').toLowerCase();
+            
+            card.innerHTML = `
+                <img class="book-cover" src="${book.cover_url || 'https://via.placeholder.com/100x150?text=No+Cover'}" alt="Cover">
+                <h3 class="book-title">${escapeHTML(book.title)}</h3>
+                <p class="star-rating">${'★'.repeat(Math.max(1, Math.min(5, book.rating || 5)))}</p>
+                <p class="review-text">${escapeHTML(book.review)}</p>
+                <p class="cosmic-relation">Infinity Relation: ${escapeHTML(book.relation)}</p>
+                <div class="card-actions">
+                    <button class="edit-btn" onclick="editBook(${book.id})">Edit</button>
+                    <button class="delete-btn" onclick="removeBook(${book.id})">Remove</button>
+                </div>
+            `;
+            library.appendChild(card);
         });
 
-        function getSavedBooks() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                return saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                console.error("Error reading from localStorage", e);
-                return [];
+        filterBooks();
+    }
+
+    // Remove Book
+    async function removeBook(id) {
+        if (!confirm("Are you sure you want to remove this text from the library?")) return;
+        const { error } = await supabase.from('books').delete().eq('id', id);
+        if (error) {
+            alert("Error removing book: " + error.message);
+        } else {
+            fetchAndRenderLibrary();
+        }
+    }
+
+    // Edit Book
+    async function editBook(id) {
+        const { data: book, error: fetchErr } = await supabase.from('books').select('*').eq('id', id).single();
+        if (fetchErr || !book) return;
+
+        const newTitle = prompt("Edit Book Title:", book.title);
+        if (newTitle === null) return;
+        const newReview = prompt("Edit Review:", book.review);
+        if (newReview === null) return;
+        const newRelation = prompt("Edit Cosmic Relation:", book.relation);
+        if (newRelation === null) return;
+        const newRatingStr = prompt("Edit Rating (1-5 Stars):", book.rating);
+        if (newRatingStr === null) return;
+
+        const newRating = parseInt(newRatingStr, 10);
+
+        const { error } = await supabase
+            .from('books')
+            .update({
+                title: newTitle.trim() || book.title,
+                review: newReview.trim() || book.review,
+                relation: newRelation.trim() || book.relation,
+                rating: (!isNaN(newRating) && newRating >= 1 && newRating <= 5) ? newRating : book.rating
+            })
+            .eq('id', id);
+
+        if (error) {
+            alert("Error updating book: " + error.message);
+        } else {
+            fetchAndRenderLibrary();
+        }
+    }
+
+    // Search Filter
+    const searchInput = document.getElementById('searchBooks');
+    searchInput.addEventListener('input', filterBooks);
+
+    function filterBooks() {
+        const query = (searchInput.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.book-card');
+        cards.forEach(card => {
+            const title = card.dataset.title || '';
+            const review = card.dataset.review || '';
+            const relation = card.dataset.relation || '';
+            if (title.includes(query) || review.includes(query) || relation.includes(query)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
             }
-        }
+        });
+    }
 
-        function saveBooks(books) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(books));
-            } catch (e) {
-                alert("Storage limit reached or localStorage disabled.");
-            }
-        }
-
-        function removeBook(id) {
-            let books = getSavedBooks();
-            books = books.filter(book => book.id !== id);
-            saveBooks(books);
-            renderLibrary();
-        }
-
-        function editBook(id) {
-            const books = getSavedBooks();
-            const book = books.find(b => b.id === id);
-            if (!book) return;
-
-            const newTitle = prompt("Edit Book Title:", book.title);
-            if (newTitle === null) return;
-
-            const newReview = prompt("Edit Review:", book.review);
-            if (newReview === null) return;
-
-            const newRelation = prompt("Edit Cosmic Relation:", book.relation);
-            if (newRelation === null) return;
-
-            const newRatingStr = prompt("Edit Rating (1-5 Stars):", book.rating);
-            if (newRatingStr === null) return;
-
-            const newRating = parseInt(newRatingStr, 10);
-
-            book.title = newTitle.trim() || book.title;
-            book.review = newReview.trim() || book.review;
-            book.relation = newRelation.trim() || book.relation;
-            book.rating = (!isNaN(newRating) && newRating >= 1 && newRating <= 5) ? newRating : book.rating;
-
-            saveBooks(books);
-            renderLibrary();
-        }
-
-        function renderLibrary() {
-            const library = document.getElementById('libraryDisplay');
-            library.innerHTML = '';
-            const books = getSavedBooks();
-
-            books.forEach(book => {
-                const card = document.createElement('div');
-                card.className = 'book-card';
-                card.dataset.title = (book.title || '').toLowerCase();
-                card.dataset.review = (book.review || '').toLowerCase();
-                card.dataset.relation = (book.relation || '').toLowerCase();
-
-                card.innerHTML = `
-                    <img class="book-cover" src="${book.cover || 'https://via.placeholder.com/100x150?text=No+Cover'}" alt="Cover">
-                    <h3 class="book-title">${escapeHTML(book.title)}</h3>
-                    <p class="star-rating">${'★'.repeat(Math.max(1, Math.min(5, book.rating || 5)))}</p>
-                    <p class="review-text">${escapeHTML(book.review)}</p>
-                    <p class="cosmic-relation">Infinity Relation: ${escapeHTML(book.relation)}</p>
-                    <div class="card-actions">
-                        <button class="edit-btn" onclick="editBook(${book.id})">Edit</button>
-                        <button class="delete-btn" onclick="removeBook(${book.id})">Remove</button>
-                    </div>
-                `;
-
-                library.appendChild(card);
-            });
-
-            filterBooks();
-        }
-
-        const searchInput = document.getElementById('searchBooks');
-        searchInput.addEventListener('input', filterBooks);
-
-        function filterBooks() {
-            const query = (searchInput.value || '').toLowerCase().trim();
-            const cards = document.querySelectorAll('.book-card');
-
-            cards.forEach(card => {
-                const title = card.dataset.title || '';
-                const review = card.dataset.review || '';
-                const relation = card.dataset.relation || '';
-
-                if (title.includes(query) || review.includes(query) || relation.includes(query)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function escapeHTML(str) {
-            if (!str) return '';
-            return str.replace(/[&<>'"]/g, 
-                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-            );
-        }
-    </script>
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[tag] || tag));
+    }
+</script>
 </body>
 </html>
